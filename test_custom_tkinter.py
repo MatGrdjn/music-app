@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-app = ctk.Ctk()
+app = ctk.CTk()
 
 def button_callback():
     print("Bouton pressé")
