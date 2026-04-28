@@ -136,7 +136,7 @@ class MainWindow(ctk.CTk):
         if track is None:
             track = Track(
                 yt_id=yt_id,
-                title=title
+                title=title,
                 artist=artist
                 file_path=None,
                 last_played=None,
