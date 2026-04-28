@@ -96,6 +96,13 @@ class MainWindow(ctk.CTk):
         )
     
 
+    @staticmethod
+    def _extract_artist(result: dict) -> str:
+        artists = result.get("artists")
+        if artists and isinstance(artists, list) and len(artists) > 0:
+            return artists[0].get("name", "?")
+        return "?"
+
     def _on_search(self):
         query = self._search_entry.get().strip()
         if not query:
@@ -115,7 +122,7 @@ class MainWindow(ctk.CTk):
         
         for i, result in enumerate(results):
             title = result.get("title", "?")
-            artist = result["artist"][0]["name"] if result.get("artist") else "?"
+            artist = self._extract_artist(result)
             label = f"{title} - {artist}"
 
             button = ctk.CTkButton(self._result_frame, text=label, anchor="w", command=lambda r = result: self._on_track_selected(r))
@@ -130,7 +137,7 @@ class MainWindow(ctk.CTk):
     def _on_track_selected(self, result: dict):
         yt_id = result["videoId"]
         title = result.get("title", "?")
-        artist = result["artist"][0]["name"] if result.get("artist") else "?"
+        artist = self._extract_artist(result)
 
         track = self._storage.get_track(yt_id)
         if track is None:
