@@ -1,0 +1,31 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Audio cache (fichiers MP3 téléchargés par yt-dlp)
+music_cache/
+
+# Données utilisateur générées à l'exécution
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store
