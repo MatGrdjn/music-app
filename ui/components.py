@@ -94,3 +94,49 @@ class PlayerBar(ctk.CTkFrame):
     def _ms_to_str(ms: int) -> str:
         seconds = int(ms // 1000)
         return f"{seconds // 60}:{seconds % 60:02d}"
+    
+
+class TrackRow(ctk.CTkFrame):
+
+    def __init__(self, parent, title: str, artist: str, on_play, on_add):
+        super().__init__(parent)
+
+        self._title = title
+        self._artist = artist
+        self._on_play = on_play
+        self._on_add = on_add
+
+        self._build()
+
+    def _build(self):
+
+        # === Colonne 0 : label ===
+
+        self._label = ctk.CTkLabel(self, text=f"{self._title} - {self._artist}", anchor="w")
+        self._label.grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=(10, 5),
+            pady=5
+        )
+
+        # === Colonne 1 : bouton play ===
+        self._button_play = ctk.CTkButton(self, text="▶", width=36, command=self._on_play)
+        self._button_play.grid(
+            row=0, 
+            column=1,
+            padx=(0, 5),
+            pady=5
+        )
+
+        # === Colonne 2 : bouton ajouter ===
+        self._button_add = ctk.CTkButton(self, text="➕", width=36, command=self._on_add)
+        self._button_add.grid(
+            row=0,
+            column=2,
+            padx=(0, 10),
+            pady=5
+        )
+
+        self.columnconfigure(0, weight=1)

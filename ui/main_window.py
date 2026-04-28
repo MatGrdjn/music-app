@@ -5,9 +5,10 @@ from ytmusicapi import YTMusic
 from core.player import PlaybackManager
 from core.downloder import BackgroundDownloader
 from core.cache import CacheEngine
+from core.playlist import Playlist
 from data.csv_storage import CSVStorage
 from data.interface import Track
-from ui.components import PlayerBar
+from ui.components import PlayerBar, TrackRow
 
 
 class MainWindow(ctk.CTk):
@@ -22,10 +23,14 @@ class MainWindow(ctk.CTk):
         self._player = PlaybackManager()
         self._downloader = BackgroundDownloader(on_complete=self._on_download_complete)
         self._cache = CacheEngine(self._storage)
+        self._playlist = Playlist()
         self._ytmusic = YTMusic()
     
         self._current_track: Track | None = None
         self._search_results: list[dict] = []
+
+        self._prefetch_done: bool = False
+        self._was_playing: bool = False
 
         self._build()
         self._cache.clean()
@@ -123,10 +128,9 @@ class MainWindow(ctk.CTk):
         for i, result in enumerate(results):
             title = result.get("title", "?")
             artist = self._extract_artist(result)
-            label = f"{title} - {artist}"
 
-            button = ctk.CTkButton(self._result_frame, text=label, anchor="w", command=lambda r = result: self._on_track_selected(r))
-            button.grid(
+            track_row = TrackRow(self._result_frame, title, artist, on_play=lambda r=result : self._on_play_now(r), on_add=lambda r=result : self._on_add_to_queue(r))
+            track_row.grid(
                 row=i,
                 column=0,
                 sticky="ew",
@@ -134,7 +138,8 @@ class MainWindow(ctk.CTk):
                 pady=2
             )
 
-    def _on_track_selected(self, result: dict):
+
+    def _result_to_track(self, result: dict) -> Track:
         yt_id = result["videoId"]
         title = result.get("title", "?")
         artist = self._extract_artist(result)
@@ -151,16 +156,18 @@ class MainWindow(ctk.CTk):
                 is_downloaded=False
             )
             self._storage.save_track(track)
-        
-        self._current_track = track
-        self._player_bar.update_track_info(title, artist)
 
+        return track
+    
+    def _start_track(self, track: Track):
         if track.is_downloaded and track.file_path:
             self._play_track(track)
         else:
-            self._downloader.enqueue(yt_id)
+            self._downloader.enqueue(track.yt_id)
+
     
     def _play_track(self, track: Track):
+        self._prefetch_done = False
         self._player.play(track.file_path)
         self._player_bar.set_playing(True)
         self._storage.update_play_stats(track.yt_id, time.time())
@@ -185,19 +192,61 @@ class MainWindow(ctk.CTk):
             self._player_bar.set_playing(True)
     
     def _on_previous(self):
-        pass # à implémenter plus tard
+        previous_track = self._playlist.previous()
+
+        if previous_track is None:
+            return
+
+        self._current_track = previous_track
+        self._player_bar.update_track_info(previous_track.title, previous_track.artist)
+        self._start_track(previous_track)
 
     def _on_next(self):
-        pass # à implémenter plus tard
+        next_track = self._playlist.next()
+
+        if next_track is None:
+            return
+        
+        self._current_track = next_track
+        self._player_bar.update_track_info(next_track.title, next_track.artist)
+        self._start_track(next_track)
 
     def _on_seek(self, value: float):
         self._player.seek(value)
+
+    def _on_play_now(self, result: dict):
+        track = self._result_to_track(result)
+        self._playlist.load([track])
+        self._current_track = track
+        self._player_bar.update_track_info(track.title, track.artist)
+
+        self._start_track(track)
+
+    def _on_add_to_queue(self, result: dict):
+        track = self._result_to_track(result)
+        self._playlist.add_next(track)
     
     def _refresh_loop(self):
-        if self._player.is_playing():
+
+        is_playing = self._player.is_playing()
+
+        if is_playing:
             self._player_bar.update_position(
                 self._player.get_duration() * self._player.get_position(), # ms écoulées
                 self._player.get_duration()
             )
+
+        if self._player.get_position() > 0.8 and self._playlist.has_next():
+            
+            next_track = self._playlist.peek_next()
+
+            if next_track and not self._prefetch_done:
+                self._downloader.enqueue(next_track.yt_id)
+                self._prefetch_done = True
+
+        if self._was_playing and not is_playing and self._playlist.has_next():
+            self._on_next()
         
+
+        self._was_playing = is_playing
         self.after(250, self._refresh_loop)
