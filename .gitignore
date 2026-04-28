@@ -17,6 +17,7 @@ music_cache/
 *.db
 *.sqlite
 *.sqlite3
+browser.json
 
 # IDE
 .vscode/

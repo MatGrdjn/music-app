@@ -24,7 +24,7 @@ class MainWindow(ctk.CTk):
         self._downloader = BackgroundDownloader(on_complete=self._on_download_complete)
         self._cache = CacheEngine(self._storage)
         self._playlist = Playlist()
-        self._ytmusic = YTMusic()
+        self._ytmusic = YTMusic("browser.json")
     
         self._current_track: Track | None = None
         self._search_results: list[dict] = []
