@@ -190,7 +190,7 @@ class PlaylistRow(ctk.CTkFrame):
 class PlaylistPanel(ctk.CTkScrollableFrame):
     
     def __init__(self, parent):
-        super().__init__(parent, label="File de lecture")
+        super().__init__(parent, label_text="File de lecture")
 
         self.columnconfigure(0, weight=1)
 
