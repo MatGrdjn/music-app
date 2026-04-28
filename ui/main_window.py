@@ -137,7 +137,7 @@ class MainWindow(ctk.CTk):
             track = Track(
                 yt_id=yt_id,
                 title=title,
-                artist=artist
+                artist=artist,
                 file_path=None,
                 last_played=None,
                 play_count=0,
