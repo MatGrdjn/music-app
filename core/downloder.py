@@ -43,6 +43,7 @@ class BackgroundDownloader:
                 "key" : "FFmpegExtractAudio",
                 "preferredcodec" : "mp3"
             }],
+            "cookiesfrombrowser" :("chrome",),
             "quiet" : True
         }
 
