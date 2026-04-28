@@ -46,3 +46,37 @@ class Playlist:
             return self._tracks[self._index + 1]
         
         return None
+
+    def remove(self, index: int) -> None:        
+        if index < self._index:
+            self._index -= 1
+        elif index == self._index and self._index == len(self._tracks) - 1:
+            self._index -= 1
+
+        self._tracks.pop(index)
+            
+
+    def move(self, from_index: int, to_index: int) -> None:
+        track = self._tracks.pop(from_index)
+        self._tracks.insert(to_index, track)
+
+        if from_index < self._index and to_index >= self._index:
+            self._index -= 1
+        
+        if from_index > self._index and to_index <= self._index:
+            self._index += 1
+        
+        if from_index == self._index:
+            self._index = to_index
+    
+    def get_tracks(self) -> list[Track]:
+        return self._tracks
+    
+    def get_index(self) -> int:
+        return self._index
+    
+    def jump_to(self, index: int) -> Track | None:
+        if 0 <= index < len(self._tracks):
+            self._index = index
+            return self._tracks[index]
+        return None

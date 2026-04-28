@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from data.interface import Track
 
 class PlayerBar(ctk.CTkFrame):
 
@@ -140,3 +141,72 @@ class TrackRow(ctk.CTkFrame):
         )
 
         self.columnconfigure(0, weight=1)
+
+
+class PlaylistRow(ctk.CTkFrame):
+
+    def __init__(self, parent, track: Track, is_current: bool, on_remove, on_play):
+        super().__init__(parent)
+
+        self._track = track
+        self._is_current = is_current
+        self._on_remove = on_remove
+        self._on_play = on_play
+
+        self._build()
+
+    def _build(self):
+        text_color = "#1DB954" if self._is_current else "#FFFFFF"
+
+        self._label_playing = ctk.CTkLabel(self, text="▶" if self._is_current else " ", text_color=text_color, width=20)
+        self._label_playing.grid(
+            row=0, 
+            column=0, 
+            padx=(10, 0), 
+            pady=5
+            )
+
+        self._label_track = ctk.CTkLabel(self, text=f"{self._track.title} - {self._track.artist}", text_color=text_color, anchor="w")
+        self._label_track.grid(
+            row=0, 
+            column=1, 
+            sticky="ew", 
+            padx=(5, 5), 
+            pady=5
+            )
+        self._label_track.bind("<Button-1>", lambda e: self._on_play())
+
+        self._button_remove = ctk.CTkButton(self, text="✕", width=30, command=self._on_remove)
+        self._button_remove.grid(
+            row=0, 
+            column=2, 
+            padx=(0, 10), 
+            pady=5
+            )
+
+        self.columnconfigure(1, weight=1)
+
+
+class PlaylistPanel(ctk.CTkScrollableFrame):
+    
+    def __init__(self, parent):
+        super().__init__(parent, label="File de lecture")
+
+        self.columnconfigure(0, weight=1)
+
+    def refresh(self, tracks: list[Track], current_index: int, on_remove, on_play):
+
+        for widget in self.winfo_children():
+            widget.destroy()
+
+        for i, track in enumerate(tracks):
+            is_current = (i == current_index)
+
+            playlist_row = PlaylistRow(self, track, is_current, on_remove=lambda i=i : on_remove(i), on_play=lambda i=i : on_play(i))
+            playlist_row.grid(
+                row=i, 
+                column=0,
+                sticky="ew",
+                padx=5,
+                pady=2
+            )

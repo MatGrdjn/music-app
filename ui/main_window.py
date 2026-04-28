@@ -8,7 +8,7 @@ from core.cache import CacheEngine
 from core.playlist import Playlist
 from data.csv_storage import CSVStorage
 from data.interface import Track
-from ui.components import PlayerBar, TrackRow
+from ui.components import PlayerBar, TrackRow, PlaylistPanel
 
 
 class MainWindow(ctk.CTk):
@@ -40,6 +40,7 @@ class MainWindow(ctk.CTk):
     def _build(self):
         self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
 
         # === Ligne 0 : barre de recherche ===
 
@@ -47,6 +48,7 @@ class MainWindow(ctk.CTk):
         search_frame.grid(
             row=0,
             column=0,
+            columnspan=2,
             sticky="ew",
             padx=10,
             pady=10
@@ -71,7 +73,7 @@ class MainWindow(ctk.CTk):
             pady=10
         )
 
-        # === Ligne 1 : liste des résultats ===
+        # === Ligne 1 : liste des résultats et liste de lecture===
 
         self._result_frame = ctk.CTkScrollableFrame(self, label_text="Résultats")
         self._result_frame.grid(
@@ -83,10 +85,19 @@ class MainWindow(ctk.CTk):
         )
         self._result_frame.columnconfigure(0, weight=1)
 
-        # === Ligne 2 : barre de lectue ===
+        self._playlist_panel = PlaylistPanel(self)
+        self._playlist_panel.grid(
+            row=1,
+            column=1,
+            sticky="nsew",
+            padx=10,
+            pady=10
+        )
+
+        # === Ligne 2 : barre de lecture ===
 
         self._player_bar = PlayerBar(
-            self, 
+            self,
             on_play_pause=self._on_play_pause,
             on_previous=self._on_previous,
             on_next=self._on_next,
@@ -95,10 +106,12 @@ class MainWindow(ctk.CTk):
         self._player_bar.grid(
             row=2,
             column=0,
+            columnspan=2,
             sticky="ew",
             padx=10,
             pady=10
         )
+
     
 
     @staticmethod
@@ -172,6 +185,12 @@ class MainWindow(ctk.CTk):
         self._player_bar.set_playing(True)
         self._storage.update_play_stats(track.yt_id, time.time())
 
+    def _refresh_playlist(self):
+        tracks = self._playlist.get_tracks()
+        current_index = self._playlist.get_index()
+
+        self._playlist_panel.refresh(tracks, current_index, self._on_playlist_remove, self._on_playlist_play)
+
     def _on_download_complete(self, yt_id: str, file_path: str):
         track = self._storage.get_track(yt_id)
         if track:
@@ -182,6 +201,7 @@ class MainWindow(ctk.CTk):
         if self._current_track and self._current_track.yt_id == yt_id:
             self._current_track.file_path = file_path
             self._play_track(self._current_track)
+            self._refresh_playlist()
     
     def _on_play_pause(self):
         if self._player.is_playing():
@@ -200,6 +220,7 @@ class MainWindow(ctk.CTk):
         self._current_track = previous_track
         self._player_bar.update_track_info(previous_track.title, previous_track.artist)
         self._start_track(previous_track)
+        self._refresh_playlist()
 
     def _on_next(self):
         next_track = self._playlist.next()
@@ -210,6 +231,7 @@ class MainWindow(ctk.CTk):
         self._current_track = next_track
         self._player_bar.update_track_info(next_track.title, next_track.artist)
         self._start_track(next_track)
+        self._refresh_playlist()
 
     def _on_seek(self, value: float):
         self._player.seek(value)
@@ -221,10 +243,34 @@ class MainWindow(ctk.CTk):
         self._player_bar.update_track_info(track.title, track.artist)
 
         self._start_track(track)
+        self._refresh_playlist()
 
     def _on_add_to_queue(self, result: dict):
         track = self._result_to_track(result)
         self._playlist.add_next(track)
+        self._refresh_playlist()
+
+    def _on_playlist_remove(self, index: int):
+        was_current = (index == self._playlist.get_index())
+        self._playlist.remove(index)
+
+        if was_current:
+            self._player.stop()
+            self._player_bar.set_playing(False)
+            self._current_track = None
+        
+        self._refresh_playlist()
+
+    def _on_playlist_play(self, index: int):
+        new_track = self._playlist.jump_to(index)
+
+        if new_track is None:
+            return
+        
+        self._current_track = new_track
+        self._player_bar.update_track_info(new_track.title, new_track.artist)
+        self._start_track(new_track)
+        self._refresh_playlist()
     
     def _refresh_loop(self):
 
