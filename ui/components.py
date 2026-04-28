@@ -36,7 +36,7 @@ class PlayerBar(ctk.CTkFrame):
         self._slider.grid(
             row=1, 
             column=1, 
-            columspan=3, 
+            columnspan=3, 
             sticky="ew", 
             padx=10
             )
