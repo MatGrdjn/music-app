@@ -3,7 +3,7 @@ import customtkinter as ctk
 class PlayerBar(ctk.CTkFrame):
 
     def __init__(self, parent, on_play_pause, on_previous, on_next, on_seek):
-        super().__init_(parent)
+        super().__init__(parent)
 
         self._on_play_pause = on_play_pause
         self._on_previous = on_previous
