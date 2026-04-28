@@ -92,5 +92,5 @@ class PlayerBar(ctk.CTkFrame):
     
     @staticmethod
     def _ms_to_str(ms: int) -> str:
-        seconds = ms // 1000
+        seconds = int(ms // 1000)
         return f"{seconds // 60}:{seconds % 60:02d}"

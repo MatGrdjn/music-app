@@ -193,4 +193,4 @@ class MainWindow(ctk.CTk):
                 self._player.get_duration()
             )
         
-        self.after(500, self._refresh_loop)
+        self.after(250, self._refresh_loop)
